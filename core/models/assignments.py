@@ -61,10 +61,11 @@ class Assignment(db.Model):
 
     @classmethod
     def submit(cls, _id, teacher_id, auth_principal: AuthPrincipal):
-        assignment = Assignment.get_by_id(_id)
+        assignment: Assignment = Assignment.get_by_id(_id)
         assertions.assert_found(assignment, 'No assignment with this id was found')
         assertions.assert_valid(assignment.student_id == auth_principal.student_id, 'This assignment belongs to some other student')
         assertions.assert_valid(assignment.content is not None, 'assignment with empty content cannot be submitted')
+        assertions.assert_valid(assignment.state == AssignmentStateEnum.DRAFT, msg='only a draft assignment can be submitted')
 
         assignment.state = AssignmentStateEnum.SUBMITTED
         assignment.teacher_id = teacher_id
@@ -78,6 +79,12 @@ class Assignment(db.Model):
         assignment = Assignment.get_by_id(_id)
         assertions.assert_found(assignment, 'No assignment with this id was found')
         assertions.assert_valid(grade is not None, 'assignment with empty grade cannot be graded')
+        if auth_principal.teacher_id: 
+            assertions.assert_valid(assignment.teacher_id == auth_principal.teacher_id, 'assignment submitted to wrong teacher')
+        if auth_principal.principal_id: 
+            print(assignment)
+            assertions.assert_valid(assignment.state != AssignmentStateEnum.DRAFT, msg='principal cannot grade draft assignments')
+            
 
         assignment.grade = grade
         assignment.state = AssignmentStateEnum.GRADED
@@ -91,11 +98,11 @@ class Assignment(db.Model):
 
     # Filter by teacher_id 
     @classmethod
-    def get_assignments_by_teacher(cls):
-        return cls.query.all() 
+    def get_assignments_by_teacher(cls, teacher_id):
+        return cls.filter(cls.teacher_id == teacher_id).all() 
 
     @classmethod
-    def get_assignments(cls): 
-        return cls.query.all() 
+    def get_assignments_for_principal(cls): 
+        return cls.filter(cls.state != AssignmentStateEnum.DRAFT).all() 
 
 

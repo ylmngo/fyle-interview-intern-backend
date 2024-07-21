@@ -11,7 +11,7 @@ principal_assignments_resources = Blueprint('principal_assignment_resources', __
 @decorators.authenticate_principal 
 def list_assignmetns(p): 
     """Return a list of assignments"""
-    principal_assignments = Assignment.get_assignments() 
+    principal_assignments = Assignment.get_assignments_for_principal() 
     principal_assignments_dump = AssignmentSchema().dump(principal_assignments, many=True) 
     return APIResponse.respond(data=principal_assignments_dump) 
 
@@ -20,7 +20,6 @@ def list_assignmetns(p):
 @decorators.authenticate_principal 
 def grade_assignment(p, incoming_payload): 
     """Grade or regrade an assignment"""
-    print("Here I am boys")
     grade_assignment_payload = AssignmentGradeSchema().load(incoming_payload) 
 
     graded_assignment = Assignment.mark_grade(
