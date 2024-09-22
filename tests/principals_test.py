@@ -1,5 +1,5 @@
 from core.models.assignments import AssignmentStateEnum, GradeEnum
-
+import json
 
 def test_get_assignments(client, h_principal):
     response = client.get(
@@ -60,3 +60,17 @@ def test_regrade_assignment(client, h_principal):
 
     assert response.json['data']['state'] == AssignmentStateEnum.GRADED.value
     assert response.json['data']['grade'] == GradeEnum.B
+
+def test_get_teachers(client, h_principal): 
+    response = client.get(
+        '/principal/teachers/', 
+        headers = h_principal
+    )
+
+    assert response.status_code == 200 
+
+    principal = json.loads(h_principal['X-Principal'])
+
+    data = response.json['data']
+    for teacher in data: 
+        assert teacher['user_id'] != principal['user_id']
